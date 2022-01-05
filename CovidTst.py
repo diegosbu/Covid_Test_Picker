@@ -1,11 +1,22 @@
+# Imports
+from dotenv import load_dotenv
+load_dotenv()
+import os
+
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
-import time
-from datetime import date, timedelta
 
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+
+from datetime import date, timedelta
+import time
+
+# BU login credentials
+userInput = os.environ.get("user")
+passInput = os.environ.get("pass")
 
 # Chooses next closest Friday date
 choseDay = date.today()
@@ -26,16 +37,15 @@ friYear = choseDay.year
 
 apptDate = str("%02d" % friMonth) + str("%02d" % 7) + str(friYear)
 
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-
+# Automatically fills out forms/prompts
 driver.get("https://patientconnect.bu.edu")
 
 username = driver.find_element(By.ID, "j_username")
 passwrd = driver.find_element(By.ID, "j_password")
 submit = driver.find_element(By.CLASS_NAME, "input-submit")
 
-username.send_keys("")
-passwrd.send_keys("")
+username.send_keys(userInput)
+passwrd.send_keys(passInput)
 submit.click()
 
 driver.get("https://patientconnect.bu.edu/appointments_home.aspx")
@@ -86,17 +96,12 @@ calendar.send_keys(apptDate[4])
 calendar.send_keys(apptDate[5])
 calendar.send_keys(apptDate[6])
 calendar.send_keys(apptDate[7])
-    
-# locations = driver.find_element(By.ID, "LocationList")
-# locations.click()
 
+GalleryLoc = driver.find_element(By.XPATH, "//select[@id='LocationList']/option[2]")
+GalleryLoc.click()
 
-time.sleep(10)
-
-# elem.send_keys("j")
-
-
-# elem.send_keys(Keys.RETURN)
+confirmAppt = driver.find_element(By.ID, "apptSearch")
+confirmAppt.click()
 
 time.sleep(5)
 

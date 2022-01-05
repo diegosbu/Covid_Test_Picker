@@ -2,4 +2,4 @@
 \lib
 \Scripts
 pyvenv.cfg
-
+.env
