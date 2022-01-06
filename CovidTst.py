@@ -18,26 +18,32 @@ import time
 userInput = os.environ.get("user")
 passInput = os.environ.get("pass")
 
-# Chooses next closest Friday date
-choseDay = date.today()
-extraDay = timedelta(days = 1)
+# dateGen: Chooses next closest Friday date
+def dateGen(choseDay):
+    choseDay = date.today()
+    extraDay = timedelta(days = 1)
 
-prod = 4 - choseDay.weekday()
+    prod = 4 - choseDay.weekday()
 
-if prod == -1:
-    prod = 6
-elif prod == -2:
-    prod = 5
+    if prod == -1:
+        prod = 6
+    elif prod == -2:
+        prod = 5
 
-choseDay += (extraDay*prod)
+    choseDay += (extraDay*prod)
 
-friMonth = choseDay.month
-friDay = choseDay.day
-friYear = choseDay.year
+    friMonth = choseDay.month
+    friDay = choseDay.day
+    friYear = choseDay.year
 
-apptDate = str("%02d" % friMonth) + str("%02d" % 7) + str(friYear)
+    friDate = str("%02d" % friMonth) + str("%02d" % friDay) + str(friYear)
 
-# Automatically fills out forms/prompts
+    return friDate
+
+# set equal to friDate
+apptDate = dateGen(date.today())
+
+# Fills out forms/prompts prior to appointment search
 driver.get("https://patientconnect.bu.edu")
 
 username = driver.find_element(By.ID, "j_username")
@@ -86,6 +92,7 @@ proceed.click()
 proceed2 = driver.find_element(By.ID, "cmdStandardProceed")
 proceed2.click()
 
+# Sets date for appointment search
 calendar = driver.find_element(By.ID, "StartDate")
 calendar.send_keys(Keys.CONTROL + "a")
 calendar.send_keys(Keys.DELETE)
@@ -97,11 +104,28 @@ calendar.send_keys(apptDate[5])
 calendar.send_keys(apptDate[6])
 calendar.send_keys(apptDate[7])
 
-GalleryLoc = driver.find_element(By.XPATH, "//select[@id='LocationList']/option[2]")
+# Chooses location for appointment
+GalleryLoc = driver.find_element(By.XPATH, "//select[@id='LocationList']/option[@value='51']")
 GalleryLoc.click()
 
 confirmAppt = driver.find_element(By.ID, "apptSearch")
 confirmAppt.click()
+
+apptRows = driver.find_elements(By.XPATH, "//table[@class='appt-list table table-striped table-responsive']/tbody/tr")
+friDates = []
+
+for i in apptRows:
+    if "Friday, January 7, 2022" in ((i.get_attribute('innerText')).strip()):
+        friDates.append(i)
+
+selection = friDates[-1].find_element(By.TAG_NAME, "input")
+selection.click()
+
+confirmDate = driver.find_element(By.ID, "cmdStandardProceed")
+confirmDate.click()
+
+finalConfirm = driver.find_element(By.ID, "cmdConfirm")
+finalConfirm.click()
 
 time.sleep(5)
 
