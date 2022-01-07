@@ -1,5 +1,9 @@
-# created by virtualenv automatically
 \lib
-\Scripts
 pyvenv.cfg
 .env
+*.spec
+\__pycache__
+\build
+\dist
+\Lib
+

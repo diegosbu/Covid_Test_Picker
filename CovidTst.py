@@ -9,7 +9,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+options = webdriver.ChromeOptions()
+options.add_argument("--headless")
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options = options)
 
 from datetime import date, timedelta
 import time
@@ -92,6 +94,7 @@ proceed.click()
 proceed2 = driver.find_element(By.ID, "cmdStandardProceed")
 proceed2.click()
 
+
 # Sets date for appointment search
 calendar = driver.find_element(By.ID, "StartDate")
 calendar.send_keys(Keys.CONTROL + "a")
@@ -111,22 +114,24 @@ GalleryLoc.click()
 confirmAppt = driver.find_element(By.ID, "apptSearch")
 confirmAppt.click()
 
+# Iterates through available appointments table
 apptRows = driver.find_elements(By.XPATH, "//table[@class='appt-list table table-striped table-responsive']/tbody/tr")
 friDates = []
 
+# Parses table for all Friday appointments
 for i in apptRows:
-    if "Friday, January 7, 2022" in ((i.get_attribute('innerText')).strip()):
+    if "Friday" in ((i.get_attribute('innerText')).strip()):
         friDates.append(i)
 
+# Chooses latest appointment available on Friday
 selection = friDates[-1].find_element(By.TAG_NAME, "input")
 selection.click()
 
+# Confirms appointment selection
 confirmDate = driver.find_element(By.ID, "cmdStandardProceed")
 confirmDate.click()
 
 finalConfirm = driver.find_element(By.ID, "cmdConfirm")
 finalConfirm.click()
-
-time.sleep(5)
 
 driver.quit()
