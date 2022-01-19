@@ -3,47 +3,60 @@ from dotenv import load_dotenv
 load_dotenv()
 import os
 
+from datetime import date, timedelta
+import time
+
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-options = webdriver.ChromeOptions()
-options.add_argument("--headless")
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options = options)
-
-from datetime import date, timedelta
-import time
 
 # BU login credentials
 userInput = os.environ.get("user")
 passInput = os.environ.get("pass")
 
-# dateGen: Chooses next closest Friday date
+
+# Converts day to .weekday() output
+weekDays = {
+    'Monday': 0,
+    'Tuesday': 1,
+    'Wednesday': 2,
+    'Thursday': 3,
+    'Friday': 4,
+    'Saturday': 5,
+    'Sunday': 6
+}
+
+# Input desired appointment day
+desireDay = input("What day of the week do you want your covid test?: ")
+desireDay = desireDay.capitalize()
+
+# dateGen: returns date of next closest desired weekday
 def dateGen(choseDay):
-    choseDay = date.today()
+    currDay = date.today()
     extraDay = timedelta(days = 1)
 
-    prod = 4 - choseDay.weekday()
+    while currDay.weekday() != weekDays["Friday"]:
+        currDay += extraDay        
 
-    if prod == -1:
-        prod = 6
-    elif prod == -2:
-        prod = 5
+    desireMon = currDay.month
+    desireDay = currDay.day
+    desireYr = currDay.year
 
-    choseDay += (extraDay*prod)
+    desireDate = str("%02d" % desireMon) + str("%02d" % desireDay) + str(desireYr)
 
-    friMonth = choseDay.month
-    friDay = choseDay.day
-    friYear = choseDay.year
+    return desireDate
 
-    friDate = str("%02d" % friMonth) + str("%02d" % friDay) + str(friYear)
+# Set equal to desired date
+apptDate = dateGen(desireDay)
 
-    return friDate
 
-# set equal to friDate
-apptDate = dateGen(date.today())
+# Initalizes Selenium Chrome driver
+options = webdriver.ChromeOptions()
+options.add_argument("--headless")
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options = options)
 
 # Fills out forms/prompts prior to appointment search
 driver.get("https://patientconnect.bu.edu")
@@ -116,15 +129,15 @@ confirmAppt.click()
 
 # Iterates through available appointments table
 apptRows = driver.find_elements(By.XPATH, "//table[@class='appt-list table table-striped table-responsive']/tbody/tr")
-friDates = []
+apptTimes = []
 
-# Parses table for all Friday appointments
+# Parses table for all desired date appointments
 for i in apptRows:
-    if "Friday" in ((i.get_attribute('innerText')).strip()):
-        friDates.append(i)
+    if desireDay in ((i.get_attribute('innerText')).strip()):
+        apptTimes.append(i)
 
 # Chooses latest appointment available on Friday
-selection = friDates[-1].find_element(By.TAG_NAME, "input")
+selection = apptTimes[-1].find_element(By.TAG_NAME, "input")
 selection.click()
 
 # Confirms appointment selection
@@ -133,5 +146,7 @@ confirmDate.click()
 
 finalConfirm = driver.find_element(By.ID, "cmdConfirm")
 finalConfirm.click()
+
+print("Appointment set!")
 
 driver.quit()
